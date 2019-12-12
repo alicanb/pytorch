@@ -4067,6 +4067,18 @@ class TestTransforms(TestCase):
             except NotImplementedError:
                 continue
 
+        for transform in self.unique_transforms:
+            if transform.domain is constraints.lower_cholesky or transform.codomain is constraints.lower_cholesky:
+                base = Normal(torch.zeros(3, 5, 5), torch.ones(3, 5, 5))
+            else:
+                base = Normal(torch.zeros(3, 4, 5), torch.ones(3, 4, 5))
+
+            transformed_dist = TransformedDistribution(base, transform)
+            sample_shape = transformed_dist.sample().shape
+            expected_shape = transformed_dist.batch_shape + transformed_dist.event_shape
+            self.assertEqual(expected_shape, sample_shape,
+                             "in {}: sample shape: {}, expected: {}".format(transform, sample_shape, expected_shape))
+
     def test_jit_fwd(self):
         for transform in self.unique_transforms:
             x = self._generate_data(transform).requires_grad_()
